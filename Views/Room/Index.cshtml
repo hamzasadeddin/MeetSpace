@@ -1,0 +1,181 @@
+﻿@model IEnumerable<MeetingRoomBooking.Models.MeetingRoom>
+@{
+    ViewData["Title"] = "Manage Rooms";
+    var icons = new[] { "🏢", "🚀", "👑", "🤝", "🔵", "🟣", "🏛️", "🎯", "💼", "🌐" };
+    var occupied = (ViewBag.OccupiedRooms as List<string>) ?? new List<string>();
+    var company = (string)(ViewBag.UserCompany ?? "");
+    int i = 0;
+}
+
+<div class="booking-modal-overlay" id="deleteModal"
+     style="display:none" onclick="closeDeleteBackdrop(event)">
+    <div class="booking-modal" style="max-width:420px;text-align:center">
+        <div style="width:58px;height:58px;border-radius:50%;
+                background:rgba(239,68,68,0.07);
+                border:1.5px solid rgba(239,68,68,0.18);
+                display:flex;align-items:center;justify-content:center;
+                margin:0 auto 1.2rem;font-size:1.5rem">
+            🗑️
+        </div>
+        <h4 style="font-family:'Clash Display',sans-serif;font-size:1.2rem;
+               font-weight:700;color:var(--text);margin-bottom:.55rem">
+            Remove Room?
+        </h4>
+        <p id="delete-modal-msg"
+           style="color:var(--text-secondary);font-size:.9rem;
+              line-height:1.65;margin-bottom:1.8rem">
+            Are you sure you want to remove this room?<br />
+            Existing bookings will not be affected.
+        </p>
+        <div class="d-flex gap-3">
+            <button type="button" class="btn btn-outline-primary flex-grow-1"
+                    onclick="document.getElementById('deleteModal').style.display='none'">
+                Keep Room
+            </button>
+            <form id="deleteConfirmForm" method="post" style="flex:1">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn w-100"
+                        style="background:var(--danger);color:#fff;border:none;
+                       border-radius:var(--radius-sm);font-weight:700;
+                       padding:.62rem 1rem;
+                       box-shadow:0 4px 16px rgba(239,68,68,0.22);
+                       transition:all .25s ease">
+                    Yes, Remove It
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-top:100px;padding-bottom:60px;">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-4">
+            <div class="success-toast p-3 d-flex align-items-center gap-3 shadow">
+                <span style="font-size:1.4rem">✅</span>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+        </div>
+        <script>setTimeout(() => document.querySelector('.toast-container')?.remove(), 4000)</script>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-5 fade-up">
+        <div>
+            <div class="section-badge">
+                <i class="fas fa-building me-1"></i>@company
+            </div>
+            <h2 class="section-title mb-0">Manage Rooms</h2>
+        </div>
+        <a asp-controller="Room" asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Room
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 fade-up">
+            <div style="font-size:4rem;margin-bottom:1rem">🏢</div>
+            <h4 style="color:var(--text-secondary)">No rooms yet</h4>
+            <p style="color:var(--text-secondary)">Add your first meeting room to get started</p>
+            <a asp-controller="Room" asp-action="Create" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Add New Room
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var room in Model)
+            {
+                var isOccupied = occupied.Contains(room.Room_Name);
+                <div class="col-md-6 col-lg-4 fade-up" style="animation-delay:@(i * 0.08)s">
+                    <div class="glass-card h-100 @(isOccupied ? "room-occupied" : "")">
+
+                        <div class="room-icon"
+                             style="@(isOccupied ? "background:linear-gradient(135deg,#fff5f5,#ffe4e4)" : "")">
+                            @icons[i % icons.Length]
+                            @if (isOccupied)
+                            {
+                                <span class="occupied-badge-overlay">IN USE</span>
+                            }
+                        </div>
+
+                        <div class="p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="mb-0 fw-bold" style="color:var(--text)">@room.Room_Name</h5>
+                                <span class="capacity-badge">
+                                    <i class="fas fa-users me-1"></i>@room.Room_Capacity
+                                </span>
+                            </div>
+
+                            <p class="mb-2" style="color:var(--text-secondary);font-size:.85rem">
+                                <i class="fas fa-map-marker-alt me-1" style="color:var(--primary)"></i>
+                                @(room.Room_Location ?? "No location set")
+                            </p>
+
+                            @if (!string.IsNullOrEmpty(room.Room_Amenities))
+                            {
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    @foreach (var amenity in room.Room_Amenities.Split(','))
+                                    {
+                                        <span class="amenity-tag">@amenity.Trim()</span>
+                                    }
+                                </div>
+                            }
+
+                            <div class="d-flex align-items-center justify-content-between mt-3 pt-2"
+                                 style="border-top:1.5px solid var(--border)">
+                                <span class="@(isOccupied ? "status-busy" : "status-available")
+                                     d-flex align-items-center gap-1">
+                                    <span style="width:7px;height:7px;border-radius:50%;
+                                       background:@(isOccupied ? "var(--danger)" : "var(--success)");
+                                       display:inline-block;animation:blink 1.4s ease-in-out infinite">
+                                    </span>
+                                    @(isOccupied ? "Occupied" : "Available")
+                                </span>
+
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="Room" asp-action="Edit" asp-route-id="@room.Room_Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-pen me-1"></i>Edit
+                                    </a>
+                                    <button type="button" class="btn btn-sm"
+                                            style="background:rgba(239,68,68,0.08);color:var(--danger);
+                                         border:1.5px solid rgba(239,68,68,0.2);border-radius:8px;
+                                         font-weight:700;font-size:.78rem;transition:all .2s"
+                                            onmouseover="this.style.background='var(--danger)';this.style.color='#fff'"
+                                            onmouseout="this.style.background='rgba(239,68,68,0.08)';this.style.color='var(--danger)'"
+                                            onclick="openDeleteModal(@room.Room_Id, '@Html.Raw(room.Room_Name.Replace("'", "\\'"))')">
+                                        <i class="fas fa-trash me-1"></i>Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                i++;
+            }
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        function openDeleteModal(id, name) {
+          document.getElementById('delete-modal-msg').innerHTML =
+            `Are you sure you want to remove <strong style="color:var(--text)">"${name}"</strong>?<br/>
+             <span style="font-size:.82rem;color:var(--text-secondary)">
+               Existing bookings will not be affected.
+             </span>`;
+          document.getElementById('deleteConfirmForm').action = `/Room/Delete/${id}`;
+          document.getElementById('deleteModal').style.display = 'flex';
+        }
+        function closeDeleteBackdrop(e) {
+          if (e.target.id === 'deleteModal')
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+    </script>
+}

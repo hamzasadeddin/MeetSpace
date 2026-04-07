@@ -1,0 +1,166 @@
+﻿@model MeetingRoomBooking.Models.BookingViewModel
+@{
+    ViewData["Title"] = "Book a Room";
+    var startVal = Model.StartDateTime != default
+        ? Model.StartDateTime.ToString("yyyy-MM-ddTHH:mm")
+        : DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:mm");
+    var endVal = Model.EndDateTime != default
+        ? Model.EndDateTime.ToString("yyyy-MM-ddTHH:mm")
+        : DateTime.Now.AddHours(2).ToString("yyyy-MM-ddTHH:mm");
+}
+
+<div class="booking-form-wrapper">
+    <div class="container" style="max-width:780px;">
+        <div class="text-center mb-5 fade-up">
+            <div class="section-badge">New Booking</div>
+            <h2 class="section-title mt-2">Reserve Your Space</h2>
+        </div>
+
+        <div class="glass-card p-4 p-lg-5 fade-up delay-1">
+            <form asp-action="Create" method="post" id="bookingForm">
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger mb-4"
+                     style="border-radius:12px;border-left:4px solid var(--danger);
+                  background:rgba(239,68,68,0.05);color:var(--danger);
+                  border:1.5px solid rgba(239,68,68,0.2)"></div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-door-open"></i>Select Room</p>
+                    <div class="room-selector" id="roomSelector">
+                        @{
+                            var icons2 = new[] { "🏢", "🚀", "👑", "🤝", "🔵", "🟣" }; int ri = 0;
+                        }
+                        @foreach (var room in Model.AvailableRooms)
+                        {
+                            <div class="room-option @(Model.RoomId == room.Room_Id ? "selected" : "")"
+                                 onclick="selectRoom(@room.Room_Id, this)">
+                                <div class="room-icon-sm">@icons2[ri % icons2.Length]</div>
+                                <div class="room-name">@room.Room_Name</div>
+                                <div class="room-cap"><i class="fas fa-users me-1"></i>@room.Room_Capacity ppl</div>
+                            </div>
+                            ri++;
+                        }
+                    </div>
+                    <input type="hidden" asp-for="RoomId" id="roomIdInput" />
+                    <span asp-validation-for="RoomId" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-pen"></i>Meeting Details</p>
+
+                    <div class="mb-3">
+                        <label asp-for="Subject">Meeting Subject</label>
+                        <input asp-for="Subject" class="form-control mt-1"
+                               placeholder="e.g. Q4 Strategy Review" />
+                        <span asp-validation-for="Subject" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="OrganizerName">Organizer</label>
+                        <div class="input-group mt-1">
+                            <span style="display:flex;align-items:center;padding:0 .85rem;
+                         background:var(--surface2);border:1.5px solid var(--border);
+                         border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+                         color:var(--text-secondary);font-size:.88rem">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input asp-for="OrganizerName"
+                                   class="form-control"
+                                   readonly
+                                   style="border-radius:0 var(--radius-sm) var(--radius-sm) 0 !important;
+                          background:var(--surface2) !important;
+                          color:var(--text-secondary) !important;
+                          cursor:not-allowed;font-weight:700" />
+                        </div>
+                        <span asp-validation-for="OrganizerName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description">Description (optional)</label>
+                        <textarea asp-for="Description" class="form-control mt-1" rows="3"
+                                  placeholder="Add agenda or notes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-clock"></i>Date & Time</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="StartDateTime">Start</label>
+                            <input asp-for="StartDateTime" type="datetime-local"
+                                   class="form-control mt-1" step="60" value="@startVal" />
+                            <span asp-validation-for="StartDateTime" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDateTime">End</label>
+                            <input asp-for="EndDateTime" type="datetime-local"
+                                   class="form-control mt-1" step="60" value="@endVal" />
+                            <span asp-validation-for="EndDateTime" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-redo"></i>Recurrence</p>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="IsRecurring"
+                               id="recurringCheck" onchange="toggleRecurring(this)" />
+                        <label class="form-check-label" for="recurringCheck">
+                            Make this a recurring booking
+                        </label>
+                    </div>
+                    <div class="recurring-panel @(Model.IsRecurring ? "visible" : "")"
+                         id="recurringPanel">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label>Repeat Every</label>
+                                <select asp-for="RecurrenceType" class="form-select mt-1">
+                                    <option value="">— Select —</option>
+                                    <option value="daily">Day</option>
+                                    <option value="weekly">Week</option>
+                                    <option value="monthly">Month</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="RecurrenceEndDate">Repeat Until</label>
+                                <input asp-for="RecurrenceEndDate" type="date" class="form-control mt-1" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mt-4 pt-2">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                        <i class="fas fa-calendar-check me-2"></i>Confirm Booking
+                    </button>
+                    <a asp-controller="Booking" asp-action="Index"
+                       class="btn btn-outline-primary btn-lg">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function selectRoom(id, el) {
+          document.querySelectorAll('.room-option').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          document.getElementById('roomIdInput').value = id;
+        }
+
+        function toggleRecurring(cb) {
+          document.getElementById('recurringPanel').classList.toggle('visible', cb.checked);
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', function () {
+          ['StartDateTime','EndDateTime'].forEach(n => {
+            const el = this.querySelector(`[name="${n}"]`);
+            if (el && el.value) el.value = el.value.substring(0, 16);
+          });
+        });
+    </script>
+}

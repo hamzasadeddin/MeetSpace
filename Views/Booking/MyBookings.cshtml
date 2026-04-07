@@ -1,0 +1,222 @@
+﻿@model IEnumerable<MeetingRoomBooking.Models.Communication>
+@{
+    ViewData["Title"] = "My Bookings";
+    var now = DateTime.Now;
+}
+
+<div class="booking-modal-overlay" id="cancelModal"
+     style="display:none" onclick="closeCancelBackdrop(event)">
+    <div class="booking-modal" style="max-width:420px;text-align:center">
+
+        <div style="width:58px;height:58px;border-radius:50%;
+                background:rgba(239,68,68,0.07);
+                border:1.5px solid rgba(239,68,68,0.18);
+                display:flex;align-items:center;justify-content:center;
+                margin:0 auto 1.2rem;font-size:1.5rem">
+            🗓️
+        </div>
+
+        <h4 style="font-family:'Clash Display',sans-serif;font-size:1.2rem;
+               font-weight:700;color:var(--text);margin-bottom:.55rem">
+            Cancel Booking?
+        </h4>
+
+        <p id="cancel-modal-msg"
+           style="color:var(--text-secondary);font-size:.9rem;
+              line-height:1.65;margin-bottom:1.8rem">
+            Are you sure you want to cancel this booking?<br />
+            This action cannot be undone.
+        </p>
+
+        <div class="d-flex gap-3">
+            <button type="button"
+                    class="btn btn-outline-primary flex-grow-1"
+                    onclick="document.getElementById('cancelModal').style.display='none'">
+                Keep Booking
+            </button>
+            <form id="cancelConfirmForm" method="post" style="flex:1">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn w-100"
+                        style="background:var(--danger);color:#fff;border:none;
+                       border-radius:var(--radius-sm);font-weight:700;
+                       padding:.62rem 1rem;
+                       box-shadow:0 4px 16px rgba(239,68,68,0.22);
+                       transition:all .25s ease">
+                    Yes, Cancel It
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<div class="bookings-page container pb-5">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-4">
+            <div class="success-toast p-3 d-flex align-items-center gap-3 shadow">
+                <span style="font-size:1.4rem">✅</span>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+        </div>
+        <script>
+            setTimeout(() => document.querySelector('.toast-container')?.remove(), 4000);
+        </script>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-5 fade-up">
+        <div>
+            <div class="section-badge">Your Schedule</div>
+            <h2 class="section-title mb-0">My Bookings</h2>
+        </div>
+        <a asp-controller="Booking" asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Booking
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 fade-up">
+            <div style="font-size:4rem;margin-bottom:1rem">📅</div>
+            <h4 style="color:var(--text-secondary)">No bookings yet</h4>
+            <p style="color:var(--text-secondary)">Book your first meeting room to get started</p>
+            <a asp-controller="Booking" asp-action="Index" class="btn btn-primary mt-3">
+                Browse Rooms
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="glass-card fade-up delay-1">
+            <div class="table-responsive">
+                <table class="table dark-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Room</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Organizer</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model)
+                        {
+                            string liveStatus;
+                            string pillClass;
+                            string pillIcon;
+
+                            if (b.Comm_Status == "Cancelled")
+                            {
+                                liveStatus = "Cancelled";
+                                pillClass = "status-cancelled";
+                                pillIcon = "✕";
+                            }
+                            else if (b.Comm_DateTime.HasValue &&
+                            b.Comm_ToDateTime.HasValue &&
+                            now >= b.Comm_DateTime.Value &&
+                            now <= b.Comm_ToDateTime.Value)
+                            {
+                                liveStatus = "In Room";
+                                pillClass = "status-inroom";
+                                pillIcon = "🟢";
+                            }
+                            else if (b.Comm_ToDateTime.HasValue && now > b.Comm_ToDateTime.Value)
+                            {
+                                liveStatus = "Finished";
+                                pillClass = "status-finished";
+                                pillIcon = "✓";
+                            }
+                            else
+                            {
+                                liveStatus = "Confirmed";
+                                pillClass = "status-confirmed";
+                                pillIcon = "✓";
+                            }
+
+                            bool canCancel = liveStatus == "Confirmed";
+
+                            <tr class="booking-row">
+                                <td>
+                                    <span style="font-weight:700;color:var(--text)">@b.Comm_Subject</span>
+                                    @if (b.Comm_RecurrenceRule != null)
+                                    {
+                                        <span class="ms-2"
+                                              style="font-size:.7rem;background:var(--primary-light);
+                                             color:var(--primary);border-radius:6px;
+                                             padding:2px 7px;font-weight:700">
+                                            🔄 @b.Comm_RecurrenceRule
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <span style="color:var(--primary)">
+                                        <i class="fas fa-door-open me-1"></i>@b.Comm_MeetingRoom
+                                    </span>
+                                </td>
+                                <td style="color:var(--text-secondary);font-size:.875rem">
+                                    @b.Comm_DateTime?.ToString("MMM dd, HH:mm")
+                                </td>
+                                <td style="color:var(--text-secondary);font-size:.875rem">
+                                    @b.Comm_ToDateTime?.ToString("MMM dd, HH:mm")
+                                </td>
+                                <td style="color:var(--text-secondary)">
+                                    @b.Comm_Organizer
+                                </td>
+                                <td>
+                                    <span class="status-pill @pillClass">
+                                        @pillIcon @liveStatus
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (canCancel)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm"
+                                                onclick="openCancelModal(
+                                          @b.Comm_CommunicationId,
+                                          '@Html.Raw((b.Comm_Subject ?? "this booking").Replace("'", "\\'"))')">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span style="font-size:.78rem;color:var(--text-secondary);font-style:italic">
+                                            @(liveStatus == "Cancelled" ? "—"
+                                                                            : liveStatus == "In Room" ? "🔒 In progress"
+                                                                            : "Completed")
+                            </span>
+                                                        }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        function openCancelModal(id, subject) {
+          document.getElementById('cancel-modal-msg').innerHTML =
+            `Are you sure you want to cancel <strong style="color:var(--text)">"${subject}"</strong>?<br/>
+             <span style="font-size:.82rem;color:var(--text-secondary)">
+               This action cannot be undone.
+             </span>`;
+
+          document.getElementById('cancelConfirmForm').action = `/Booking/Cancel/${id}`;
+          document.getElementById('cancelModal').style.display = 'flex';
+        }
+
+        function closeCancelBackdrop(e) {
+          if (e.target.id === 'cancelModal')
+            document.getElementById('cancelModal').style.display = 'none';
+        }
+    </script>
+}

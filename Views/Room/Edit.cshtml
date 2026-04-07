@@ -1,0 +1,126 @@
+﻿@model MeetingRoomBooking.Models.RoomViewModel
+@{
+    ViewData["Title"] = "Edit Room";
+}
+
+<div class="booking-form-wrapper">
+    <div class="container" style="max-width:680px;">
+
+        <div class="text-center mb-5 fade-up">
+            <div class="section-badge">Room Management</div>
+            <h2 class="section-title mt-2">Edit Room</h2>
+            <p style="color:var(--text-secondary);font-size:.95rem">
+                Editing <strong style="color:var(--primary)">@Model.Room_Name</strong>
+            </p>
+        </div>
+
+        <div class="glass-card p-4 p-lg-5 fade-up delay-1">
+            <form asp-action="Edit" asp-route-id="@Model.Room_Id" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger mb-4"
+                     style="border-radius:12px;border-left:4px solid var(--danger);
+                  background:rgba(239,68,68,0.05);color:var(--danger);
+                  border:1.5px solid rgba(239,68,68,0.2)"></div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-door-open"></i>Room Info</p>
+
+                    <div class="mb-3">
+                        <label asp-for="Room_Name">Room Name</label>
+                        <input asp-for="Room_Name" class="form-control mt-1" />
+                        <span asp-validation-for="Room_Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Room_Location">Location</label>
+                        <input asp-for="Room_Location" class="form-control mt-1"
+                               placeholder="e.g. Floor 3 - East Wing" />
+                        <span asp-validation-for="Room_Location" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Room_Capacity">Capacity (people)</label>
+                        <input asp-for="Room_Capacity" type="number" min="1" max="500"
+                               class="form-control mt-1" />
+                        <span asp-validation-for="Room_Capacity" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-star"></i>Amenities</p>
+                    <div class="mb-2">
+                        <label asp-for="Room_Amenities">
+                            Amenities
+                            <span style="color:var(--text-secondary);font-weight:400;
+                         font-size:.78rem;text-transform:none;letter-spacing:0">
+                                (comma-separated)
+                            </span>
+                        </label>
+                        <input asp-for="Room_Amenities" class="form-control mt-1"
+                               placeholder="e.g. Projector, Whiteboard, Video Conferencing" />
+                        <span asp-validation-for="Room_Amenities" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        @foreach (var amenity in new[]
+                                                {
+                                                "Projector","Whiteboard","Video Conferencing",
+                                                "Smart TV","Coffee Station","Standing Desks","Bar"
+                                                })
+                        {
+                            <span onclick="addAmenity('@amenity')"
+                                  style="background:var(--surface2);border:1.5px solid var(--border);
+                             border-radius:8px;padding:4px 12px;font-size:.76rem;
+                             font-weight:700;color:var(--text-secondary);cursor:pointer;
+                             transition:all .18s"
+                                  onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)';this.style.background='var(--primary-light)'"
+                                  onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)';this.style.background='var(--surface2)'">
+                                + @amenity
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-building"></i>Company</p>
+                    <div style="background:var(--primary-light);border:1.5px solid rgba(91,106,247,0.2);
+                    border-radius:var(--radius-sm);padding:.72rem 1rem;
+                    font-weight:700;color:var(--primary);font-size:.93rem">
+                        <i class="fas fa-lock me-2" style="font-size:.8rem;opacity:.7"></i>
+                        @Model.Room_Company
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mt-4 pt-2">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                    <a asp-controller="Room" asp-action="Index"
+                       class="btn btn-outline-primary btn-lg">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function addAmenity(name) {
+          const input = document.getElementById('Room_Amenities');
+          const val   = input.value.trim();
+          if (!val) {
+            input.value = name;
+          } else {
+            const parts = val.split(',').map(s => s.trim());
+            if (!parts.includes(name)) {
+              input.value = val + ', ' + name;
+            }
+          }
+        }
+    </script>
+}
