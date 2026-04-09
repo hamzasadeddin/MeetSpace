@@ -21,14 +21,14 @@
                 <div asp-validation-summary="ModelOnly"
                      class="alert alert-danger mb-4"
                      style="border-radius:12px;border-left:4px solid var(--danger);
-                  background:rgba(239,68,68,0.05);color:var(--danger);
-                  border:1.5px solid rgba(239,68,68,0.2)"></div>
+                  background:rgba(185,28,28,0.05);color:var(--danger);
+                  border:1.5px solid rgba(185,28,28,0.2)"></div>
 
                 <div class="mb-4">
                     <p class="form-section-title"><i class="fas fa-door-open"></i>Select Room</p>
                     <div class="room-selector" id="roomSelector">
                         @{
-                            var icons2 = new[] { "🏢", "🚀", "👑", "🤝", "🔵", "🟣" }; int ri = 0;
+                            var icons2 = new[] { "🏢", "🚀", "👑", "🤝", "🔵", "🟣", "🏛️", "🎯" }; int ri = 0;
                         }
                         @foreach (var room in Model.AvailableRooms)
                         {
@@ -56,7 +56,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="OrganizerName">Organizer</label>
+                        <label asp-for="OrganizerName">Point of Contact (POC)</label>
                         <div class="input-group mt-1">
                             <span style="display:flex;align-items:center;padding:0 .85rem;
                          background:var(--surface2);border:1.5px solid var(--border);
@@ -64,15 +64,12 @@
                          color:var(--text-secondary);font-size:.88rem">
                                 <i class="fas fa-user"></i>
                             </span>
-                            <input asp-for="OrganizerName"
-                                   class="form-control"
-                                   readonly
+                            <input asp-for="OrganizerName" class="form-control" readonly
                                    style="border-radius:0 var(--radius-sm) var(--radius-sm) 0 !important;
                           background:var(--surface2) !important;
                           color:var(--text-secondary) !important;
                           cursor:not-allowed;font-weight:700" />
                         </div>
-                        <span asp-validation-for="OrganizerName" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -84,19 +81,82 @@
 
                 <div class="mb-4">
                     <p class="form-section-title"><i class="fas fa-clock"></i>Date & Time</p>
+
+                    <div id="conflictBanner" style="display:none;
+             background:rgba(185,28,28,0.06);
+             border:1.5px solid rgba(185,28,28,0.25);
+             border-radius:var(--radius-sm);
+             padding:.85rem 1rem;margin-bottom:1rem;
+             color:var(--danger);font-weight:600;font-size:.88rem">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="conflictMsg"></span>
+                    </div>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="StartDateTime">Start</label>
                             <input asp-for="StartDateTime" type="datetime-local"
-                                   class="form-control mt-1" step="60" value="@startVal" />
+                                   class="form-control mt-1" step="60" value="@startVal"
+                                   id="startInput" onchange="checkConflict()" />
                             <span asp-validation-for="StartDateTime" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="EndDateTime">End</label>
                             <input asp-for="EndDateTime" type="datetime-local"
-                                   class="form-control mt-1" step="60" value="@endVal" />
+                                   class="form-control mt-1" step="60" value="@endVal"
+                                   id="endInput" onchange="checkConflict()" />
                             <span asp-validation-for="EndDateTime" class="text-danger small"></span>
                         </div>
+                    </div>
+
+                    <div id="slotsPanel" style="display:none;margin-top:1.2rem">
+                        <p style="font-size:.74rem;font-weight:800;text-transform:uppercase;
+                    letter-spacing:.1em;color:var(--navy);margin-bottom:.7rem">
+                            <i class="fas fa-calendar-check me-2"></i>Available slots for selected date
+                        </p>
+                        <div id="slotsList"
+                             style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+                        <p id="slotsAllDay"
+                           style="display:none;font-size:.82rem;color:var(--success);font-weight:600">
+                            <i class="fas fa-check-circle me-1"></i>
+                            This room is fully available all day.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="form-section-title"><i class="fas fa-envelope"></i>Invitees</p>
+                    <div class="mb-3">
+                        <label asp-for="RequiredInvitees">
+                            Required Invitees
+                            <span style="color:var(--text-secondary);font-weight:400;
+                         font-size:.78rem;text-transform:none;letter-spacing:0">
+                                (comma-separated emails)
+                            </span>
+                        </label>
+                        <input asp-for="RequiredInvitees" class="form-control mt-1"
+                               placeholder="e.g. john@company.com, sarah@company.com"
+                               oninput="validateInvitees(this)" />
+                        <span asp-validation-for="RequiredInvitees" class="text-danger small"></span>
+                        <p style="font-size:.74rem;color:var(--text-muted);margin-top:.3rem">
+                            <i class="fas fa-info-circle me-1"></i>
+                            These attendees must be present at the meeting.
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="OptionalInvitees">
+                            Optional Invitees
+                            <span style="color:var(--text-secondary);font-weight:400;
+                         font-size:.78rem;text-transform:none;letter-spacing:0">
+                                (comma-separated emails)
+                            </span>
+                        </label>
+                        <input asp-for="OptionalInvitees" class="form-control mt-1"
+                               placeholder="e.g. manager@company.com" />
+                        <p style="font-size:.74rem;color:var(--text-muted);margin-top:.3rem">
+                            <i class="fas fa-info-circle me-1"></i>
+                            These attendees are welcome but not required.
+                        </p>
                     </div>
                 </div>
 
@@ -111,6 +171,23 @@
                     </div>
                     <div class="recurring-panel @(Model.IsRecurring ? "visible" : "")"
                          id="recurringPanel">
+                        <div style="display:flex;align-items:flex-start;gap:10px;
+              background:rgba(201,168,76,0.08);
+              border:1.5px solid rgba(201,168,76,0.25);
+              border-radius:10px;padding:.8rem 1rem;margin-bottom:1rem">
+                            <i class="fas fa-info-circle"
+                               style="color:#8a6d1e;font-size:.9rem;margin-top:2px;flex-shrink:0"></i>
+                            <div>
+                                <div style="font-size:.78rem;font-weight:700;color:#8a6d1e;margin-bottom:.2rem">
+                                    One Quarter Maximum
+                                </div>
+                                <div style="font-size:.75rem;color:var(--text-secondary);line-height:1.55">
+                                    Recurring bookings are limited to <strong>92 days (one quarter)</strong> at a time.
+                                    If you need a longer recurring schedule, please
+                                    <strong>open a support ticket</strong> with your IT or facilities team.
+                                </div>
+                            </div>
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label>Repeat Every</label>
@@ -123,20 +200,21 @@
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="RecurrenceEndDate">Repeat Until</label>
-                                <input asp-for="RecurrenceEndDate" type="date" class="form-control mt-1" />
+                                <input asp-for="RecurrenceEndDate" type="date" class="form-control mt-1"
+                                       onchange="validateRecurrenceDate()" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex gap-3 mt-4 pt-2">
-                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1"
+                            id="submitBtn"
+                            style="color:var(--navy-deep) !important">
                         <i class="fas fa-calendar-check me-2"></i>Confirm Booking
                     </button>
                     <a asp-controller="Booking" asp-action="Index"
-                       class="btn btn-outline-primary btn-lg">
-                        Cancel
-                    </a>
+                       class="btn btn-outline-primary btn-lg">Cancel</a>
                 </div>
 
             </form>
@@ -145,22 +223,316 @@
 </div>
 
 @section Scripts {
+    <style>
+        .input-conflict {
+            border-color: var(--danger) !important;
+            background: rgba(185,28,28,0.04) !important;
+            box-shadow: 0 0 0 3px rgba(185,28,28,0.10) !important;
+        }
+
+        .slot-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: .78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .18s;
+            border: 1.5px solid;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .slot-free {
+            background: rgba(45,122,79,0.08);
+            border-color: rgba(45,122,79,0.25);
+            color: var(--success);
+        }
+
+            .slot-free:hover {
+                background: var(--success);
+                color: #fff;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(45,122,79,0.25);
+            }
+
+        .slot-busy {
+            background: rgba(185,28,28,0.06);
+            border-color: rgba(185,28,28,0.2);
+            color: var(--danger);
+            cursor: not-allowed;
+            opacity: .7;
+            text-decoration: line-through;
+        }
+
+        #submitBtn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+    </style>
+
     <script>
+        let busySlots   = [];
+        let currentRoom = @(Model.RoomId > 0 ? Model.RoomId.ToString() : "null");
+
+        async function fetchBusySlots(roomId) {
+          if (!roomId) { busySlots = []; return; }
+          try {
+            const res  = await fetch(`/Booking/GetBusySlots?roomId=${roomId}`);
+            const data = await res.json();
+            busySlots  = data.map(s => ({
+              start: new Date(s.start),
+              end:   new Date(s.end)
+            }));
+          } catch(e) {
+            busySlots = [];
+          }
+          checkConflict();
+          renderSlots();
+        }
+
+        function overlaps(aStart, aEnd, bStart, bEnd) {
+          return aStart < bEnd && aEnd > bStart;
+        }
+
+        function checkConflict() {
+          const startEl = document.getElementById('startInput');
+          const endEl   = document.getElementById('endInput');
+          const banner  = document.getElementById('conflictBanner');
+          const msg     = document.getElementById('conflictMsg');
+          const btn     = document.getElementById('submitBtn');
+
+          if (!startEl.value || !endEl.value) return;
+
+          const selStart = new Date(startEl.value);
+          const selEnd   = new Date(endEl.value);
+
+          if (selEnd <= selStart) {
+            banner.style.display = 'block';
+            msg.textContent = 'End time must be after start time.';
+            startEl.classList.add('input-conflict');
+            endEl.classList.add('input-conflict');
+            btn.disabled = true;
+            return;
+          }
+
+          const conflict = busySlots.find(s => overlaps(selStart, selEnd, s.start, s.end));
+
+          if (conflict) {
+            const fmtTime = d => d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+            const fmtDate = d => d.toLocaleDateString('en-GB', {day:'numeric',month:'short'});
+
+            const sortedBusy = [...busySlots].sort((a,b) => a.start - b.start);
+            let nextFree = null;
+            for (const s of sortedBusy) {
+              if (s.end > selStart) { nextFree = s.end; break; }
+            }
+
+            const hint = nextFree
+              ? ` This room is next available from ${fmtTime(nextFree)} on ${fmtDate(nextFree)}.`
+              : '';
+
+            banner.style.display = 'block';
+            msg.textContent =
+              `This room is already booked from ${fmtTime(conflict.start)} to ${fmtTime(conflict.end)}.${hint}`;
+            startEl.classList.add('input-conflict');
+            endEl.classList.add('input-conflict');
+            btn.disabled = true;
+          } else {
+            banner.style.display = 'none';
+            startEl.classList.remove('input-conflict');
+            endEl.classList.remove('input-conflict');
+            btn.disabled = false;
+          }
+
+          renderSlots();
+        }
+
+        function renderSlots() {
+          const startEl   = document.getElementById('startInput');
+          const panel     = document.getElementById('slotsPanel');
+          const list      = document.getElementById('slotsList');
+          const allDayMsg = document.getElementById('slotsAllDay');
+
+          if (!startEl.value || !currentRoom) {
+            panel.style.display = 'none';
+            return;
+          }
+
+          panel.style.display = 'block';
+          list.innerHTML = '';
+          allDayMsg.style.display = 'none';
+
+          const selectedDate = new Date(startEl.value);
+          const dayStart = new Date(selectedDate);
+                  dayStart.setHours(7, 30, 0, 0);
+        const now = new Date();
+        if (dayStart.toDateString() === now.toDateString()) {
+          const roundedNow = new Date(now);
+          roundedNow.setSeconds(0, 0);
+          const mins = roundedNow.getMinutes();
+          if (mins > 0 && mins <= 30) roundedNow.setMinutes(30);
+          else if (mins > 30)         { roundedNow.setMinutes(0); roundedNow.setHours(roundedNow.getHours() + 1); }
+          if (roundedNow > dayStart)  dayStart.setTime(roundedNow.getTime());
+        }
+          const dayEnd = new Date(selectedDate);
+          dayEnd.setHours(17, 30, 0, 0);
+
+                  const dayBusy = busySlots.filter(s => {
+          const sd = new Date(selectedDate);
+          sd.setHours(0,0,0,0);
+          const ed = new Date(sd); ed.setDate(ed.getDate()+1);
+          return s.start < ed && s.end > sd;
+        }).sort((a,b) => a.start - b.start);
+
+        if (dayStart >= dayEnd) {
+          list.innerHTML = '';
+          allDayMsg.style.display = 'none';
+          const noSlots = document.createElement('p');
+          noSlots.style.cssText = 'font-size:.82rem;color:var(--danger);font-weight:600;margin:0';
+          noSlots.innerHTML = '<i class="fas fa-clock me-1"></i>No more available slots today.';
+          list.appendChild(noSlots);
+          return;
+        }
+
+          if (dayBusy.length === 0) {
+            allDayMsg.style.display = 'block';
+            return;
+          }
+
+          const freeWindows = [];
+          let cursor = dayStart;
+
+          for (const busy of dayBusy) {
+            const bStart = busy.start < dayStart ? dayStart : busy.start;
+            const bEnd   = busy.end   > dayEnd   ? dayEnd   : busy.end;
+
+            if (cursor < bStart) {
+              freeWindows.push({ start: cursor, end: bStart, free: true });
+            }
+            freeWindows.push({ start: bStart, end: bEnd, free: false });
+            cursor = bEnd > cursor ? bEnd : cursor;
+          }
+          if (cursor < dayEnd) {
+            freeWindows.push({ start: cursor, end: dayEnd, free: true });
+          }
+
+          const fmt = d => d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+          freeWindows.forEach(w => {
+            const pill = document.createElement('span');
+            pill.className = `slot-pill ${w.free ? 'slot-free' : 'slot-busy'}`;
+
+            const icon = w.free ? '✓' : '✕';
+            pill.innerHTML = `${icon} ${fmt(w.start)} – ${fmt(w.end)}`;
+
+            if (w.free) {
+              pill.title = 'Click to use this slot';
+              pill.onclick = () => {
+                document.getElementById('startInput').value =
+                  toLocalInput(w.start);
+                document.getElementById('endInput').value =
+                  toLocalInput(w.end);
+                checkConflict();
+              };
+            } else {
+              pill.title = 'This slot is booked';
+            }
+
+            list.appendChild(pill);
+          });
+        }
+
+        function toLocalInput(d) {
+          const pad = n => String(n).padStart(2,'0');
+          return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
         function selectRoom(id, el) {
           document.querySelectorAll('.room-option').forEach(e => e.classList.remove('selected'));
           el.classList.add('selected');
           document.getElementById('roomIdInput').value = id;
+          currentRoom = id;
+          fetchBusySlots(id);
         }
 
         function toggleRecurring(cb) {
           document.getElementById('recurringPanel').classList.toggle('visible', cb.checked);
         }
 
-        document.getElementById('bookingForm').addEventListener('submit', function () {
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+          if (document.getElementById('submitBtn').disabled) {
+            e.preventDefault();
+            return;
+          }
+                  const reqInvitees = document.querySelector('[name="RequiredInvitees"]');
+        if (!reqInvitees.value.trim()) {
+          e.preventDefault();
+          reqInvitees.style.borderColor = 'var(--danger)';
+          reqInvitees.style.boxShadow   = '0 0 0 3px rgba(185,28,28,0.10)';
+          reqInvitees.focus();
+          return;
+        }
           ['StartDateTime','EndDateTime'].forEach(n => {
             const el = this.querySelector(`[name="${n}"]`);
             if (el && el.value) el.value = el.value.substring(0, 16);
           });
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+          if (currentRoom) fetchBusySlots(currentRoom);
+        });
+                function validateInvitees(input) {
+          const submitBtn = document.getElementById('submitBtn');
+          if (!input.value.trim()) {
+            input.style.borderColor = 'var(--danger)';
+            input.style.boxShadow   = '0 0 0 3px rgba(185,28,28,0.10)';
+            submitBtn.disabled = true;
+          } else {
+            input.style.borderColor = '';
+            input.style.boxShadow   = '';
+            checkConflict();
+          }
+        }
+                function validateRecurrenceDate() {
+          const startEl     = document.getElementById('startInput');
+          const endDateEl   = document.querySelector('[name="RecurrenceEndDate"]');
+          const submitBtn   = document.getElementById('submitBtn');
+
+          if (!endDateEl || !endDateEl.value || !startEl.value) return;
+
+          const startDate = new Date(startEl.value);
+          const recEnd    = new Date(endDateEl.value);
+          const maxDate   = new Date(startDate);
+          maxDate.setDate(maxDate.getDate() + 92);
+
+          if (recEnd > maxDate) {
+            endDateEl.style.borderColor = 'var(--danger)';
+            endDateEl.style.boxShadow   = '0 0 0 3px rgba(185,28,28,0.10)';
+
+            let warn = document.getElementById('recurrenceWarn');
+            if (!warn) {
+              warn = document.createElement('p');
+              warn.id = 'recurrenceWarn';
+              warn.style.cssText =
+                'font-size:.76rem;color:var(--danger);font-weight:600;margin-top:.4rem';
+              endDateEl.parentNode.appendChild(warn);
+            }
+            const fmt = d => d.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+            warn.innerHTML =
+              `<i class="fas fa-exclamation-triangle me-1"></i>` +
+              `Maximum end date for this recurrence is <strong>${fmt(maxDate)}</strong>.`;
+            submitBtn.disabled = true;
+          } else {
+            endDateEl.style.borderColor = '';
+            endDateEl.style.boxShadow   = '';
+            const warn = document.getElementById('recurrenceWarn');
+            if (warn) warn.remove();
+            checkConflict();
+          }
+        }
     </script>
 }

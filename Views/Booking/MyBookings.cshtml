@@ -7,48 +7,266 @@
 <div class="booking-modal-overlay" id="cancelModal"
      style="display:none" onclick="closeCancelBackdrop(event)">
     <div class="booking-modal" style="max-width:420px;text-align:center">
-
         <div style="width:58px;height:58px;border-radius:50%;
-                background:rgba(239,68,68,0.07);
-                border:1.5px solid rgba(239,68,68,0.18);
+                background:rgba(185,28,28,0.07);
+                border:1.5px solid rgba(185,28,28,0.18);
                 display:flex;align-items:center;justify-content:center;
                 margin:0 auto 1.2rem;font-size:1.5rem">
             🗓️
         </div>
-
-        <h4 style="font-family:'Clash Display',sans-serif;font-size:1.2rem;
+        <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;
                font-weight:700;color:var(--text);margin-bottom:.55rem">
             Cancel Booking?
         </h4>
-
         <p id="cancel-modal-msg"
            style="color:var(--text-secondary);font-size:.9rem;
               line-height:1.65;margin-bottom:1.8rem">
-            Are you sure you want to cancel this booking?<br />
-            This action cannot be undone.
+            Are you sure you want to cancel this booking?
         </p>
-
         <div class="d-flex gap-3">
-            <button type="button"
-                    class="btn btn-outline-primary flex-grow-1"
+            <button type="button" class="btn btn-outline-primary flex-grow-1"
                     onclick="document.getElementById('cancelModal').style.display='none'">
-                Keep Booking
+                Keep It
             </button>
             <form id="cancelConfirmForm" method="post" style="flex:1">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn w-100"
                         style="background:var(--danger);color:#fff;border:none;
                        border-radius:var(--radius-sm);font-weight:700;
-                       padding:.62rem 1rem;
-                       box-shadow:0 4px 16px rgba(239,68,68,0.22);
-                       transition:all .25s ease">
+                       padding:.62rem 1rem;box-shadow:0 4px 16px rgba(185,28,28,0.22)">
                     Yes, Cancel It
                 </button>
             </form>
         </div>
-
     </div>
 </div>
+
+<div class="booking-modal-overlay" id="cancelSeriesModal"
+     style="display:none" onclick="closeSeriesBackdrop(event)">
+    <div class="booking-modal" style="max-width:460px;text-align:center">
+        <div style="width:58px;height:58px;border-radius:50%;
+                background:rgba(185,28,28,0.07);
+                border:1.5px solid rgba(185,28,28,0.18);
+                display:flex;align-items:center;justify-content:center;
+                margin:0 auto 1.2rem;font-size:1.5rem">
+            🔄
+        </div>
+        <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;
+               font-weight:700;color:var(--text);margin-bottom:.55rem">
+            Cancel Recurring Series
+        </h4>
+        <p id="series-modal-msg"
+           style="color:var(--text-secondary);font-size:.88rem;
+              line-height:1.65;margin-bottom:1.6rem">
+            Choose how you want to cancel this recurring meeting.
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.6rem">
+
+            <form id="cancelSingleForm" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        style="width:100%;background:var(--surface2);
+                       border:1.5px solid var(--border);border-radius:12px;
+                       padding:.85rem 1rem;cursor:pointer;transition:all .2s;
+                       text-align:left;font-family:'DM Sans',sans-serif"
+                        onmouseover="this.style.borderColor='var(--navy)';this.style.background='rgba(26,39,68,0.04)'"
+                        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
+                    <div style="font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:.2rem">
+                        <i class="fas fa-calendar-times me-2" style="color:var(--danger)"></i>
+                        Cancel This Session Only
+                    </div>
+                    <div style="font-size:.76rem;color:var(--text-secondary)">
+                        Only removes this one occurrence. All other sessions remain active.
+                    </div>
+                </button>
+            </form>
+
+            <form id="cancelFromHereForm" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        style="width:100%;background:var(--surface2);
+                       border:1.5px solid var(--border);border-radius:12px;
+                       padding:.85rem 1rem;cursor:pointer;transition:all .2s;
+                       text-align:left;font-family:'DM Sans',sans-serif"
+                        onmouseover="this.style.borderColor='var(--warning)';this.style.background='rgba(180,83,9,0.03)'"
+                        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
+                    <div style="font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:.2rem">
+                        <i class="fas fa-forward me-2" style="color:var(--warning)"></i>
+                        Cancel This & All Future Sessions
+                    </div>
+                    <div style="font-size:.76rem;color:var(--text-secondary)">
+                        Removes this session and everything after it. Past sessions are kept.
+                    </div>
+                </button>
+            </form>
+
+            <form id="cancelSeriesForm" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        style="width:100%;background:rgba(185,28,28,0.04);
+                       border:1.5px solid rgba(185,28,28,0.2);border-radius:12px;
+                       padding:.85rem 1rem;cursor:pointer;transition:all .2s;
+                       text-align:left;font-family:'DM Sans',sans-serif"
+                        onmouseover="this.style.background='rgba(185,28,28,0.08)';this.style.borderColor='var(--danger)'"
+                        onmouseout="this.style.background='rgba(185,28,28,0.04)';this.style.borderColor='rgba(185,28,28,0.2)'">
+                    <div style="font-weight:700;font-size:.88rem;color:var(--danger);margin-bottom:.2rem">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        Cancel All Upcoming Sessions
+                    </div>
+                    <div style="font-size:.76rem;color:var(--text-secondary)">
+                        Cancels every future session in the entire series. Past sessions are kept.
+                    </div>
+                </button>
+            </form>
+
+        </div>
+
+        <button type="button"
+                onclick="document.getElementById('cancelSeriesModal').style.display='none'"
+                style="background:transparent;border:none;color:var(--text-secondary);
+                   font-size:.84rem;font-weight:600;cursor:pointer;
+                   font-family:'DM Sans',sans-serif">
+            Never mind, keep all sessions
+        </button>
+    </div>
+</div>
+
+<div id="inviteesPopup"
+     style="display:none;position:fixed;z-index:9998;
+            background:var(--surface);border:1.5px solid var(--border);
+            border-radius:14px;padding:1.1rem 1.3rem;
+            min-width:240px;max-width:320px;
+            box-shadow:0 12px 40px rgba(26,39,68,0.14);
+            pointer-events:none">
+    <div style="font-size:.66rem;font-weight:800;text-transform:uppercase;
+               letter-spacing:.1em;color:var(--text-muted);margin-bottom:.7rem">
+        Invitees
+    </div>
+    <div id="popupRequired" style="margin-bottom:.65rem">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:.35rem">
+            <span style="width:7px;height:7px;border-radius:50%;
+                   background:var(--danger);flex-shrink:0"></span>
+            <span style="font-size:.7rem;font-weight:800;text-transform:uppercase;
+                   letter-spacing:.08em;color:var(--danger)">Required</span>
+        </div>
+        <div id="popupRequiredList" style="display:flex;flex-direction:column;gap:.28rem"></div>
+    </div>
+    <div id="popupOptional">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:.35rem">
+            <span style="width:7px;height:7px;border-radius:50%;
+                   background:var(--warning);flex-shrink:0"></span>
+            <span style="font-size:.7rem;font-weight:800;text-transform:uppercase;
+                   letter-spacing:.08em;color:var(--warning)">Optional</span>
+        </div>
+        <div id="popupOptionalList" style="display:flex;flex-direction:column;gap:.28rem"></div>
+    </div>
+</div>
+
+<style>
+    .email-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(26,39,68,0.05);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: .74rem;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+        .email-chip i {
+            color: var(--text-muted);
+            font-size: .65rem;
+            flex-shrink: 0;
+        }
+
+    .invitees-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(26,39,68,0.06);
+        border: 1.5px solid rgba(26,39,68,0.12);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: .76rem;
+        font-weight: 700;
+        color: var(--navy);
+        cursor: pointer;
+        transition: all .18s;
+        white-space: nowrap;
+    }
+
+        .invitees-trigger:hover {
+            background: var(--navy);
+            color: #fff;
+            border-color: var(--navy);
+        }
+
+            .invitees-trigger:hover i {
+                color: #fff;
+            }
+
+    .series-actions {
+        position: relative;
+        display: inline-block;
+    }
+
+    .series-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(26,39,68,0.14);
+        min-width: 220px;
+        z-index: 999;
+        overflow: hidden;
+    }
+
+        .series-dropdown.open {
+            display: block;
+        }
+
+    .series-dropdown-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: .7rem .9rem;
+        cursor: pointer;
+        transition: background .15s;
+        border-bottom: 1px solid var(--border);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+        .series-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .series-dropdown-item:hover {
+            background: rgba(26,39,68,0.04);
+        }
+
+        .series-dropdown-item .sdi-title {
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .series-dropdown-item .sdi-sub {
+            font-size: .7rem;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+</style>
 
 <div class="bookings-page container pb-5">
 
@@ -60,9 +278,20 @@
                 <span>@TempData["SuccessMessage"]</span>
             </div>
         </div>
-        <script>
-            setTimeout(() => document.querySelector('.toast-container')?.remove(), 4000);
-        </script>
+        <script>setTimeout(() => document.querySelector('.toast-container')?.remove(), 4000)</script>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-4">
+            <div class="p-3 d-flex align-items-center gap-3 shadow"
+                 style="background:#fff;border-left:4px solid var(--danger);
+                              border-radius:13px;color:var(--text);font-weight:600">
+                <span style="font-size:1.4rem">⚠️</span>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+        </div>
+        <script>setTimeout(() => document.querySelector('.toast-container')?.remove(), 4000)</script>
     }
 
     <div class="d-flex justify-content-between align-items-center mb-5 fade-up">
@@ -70,7 +299,8 @@
             <div class="section-badge">Your Schedule</div>
             <h2 class="section-title mb-0">My Bookings</h2>
         </div>
-        <a asp-controller="Booking" asp-action="Create" class="btn btn-primary">
+        <a asp-controller="Booking" asp-action="Create" class="btn btn-primary"
+           style="color:var(--navy-deep) !important">
             <i class="fas fa-plus me-2"></i>New Booking
         </a>
     </div>
@@ -81,9 +311,8 @@
             <div style="font-size:4rem;margin-bottom:1rem">📅</div>
             <h4 style="color:var(--text-secondary)">No bookings yet</h4>
             <p style="color:var(--text-secondary)">Book your first meeting room to get started</p>
-            <a asp-controller="Booking" asp-action="Index" class="btn btn-primary mt-3">
-                Browse Rooms
-            </a>
+            <a asp-controller="Booking" asp-action="Index" class="btn btn-primary mt-3"
+               style="color:var(--navy-deep) !important">Browse Rooms</a>
         </div>
     }
     else
@@ -97,7 +326,8 @@
                             <th>Room</th>
                             <th>Start</th>
                             <th>End</th>
-                            <th>Organizer</th>
+                            <th>Duration</th>
+                            <th>Invitees</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -111,49 +341,63 @@
 
                             if (b.Comm_Status == "Cancelled")
                             {
-                                liveStatus = "Cancelled";
-                                pillClass = "status-cancelled";
-                                pillIcon = "✕";
+                                liveStatus = "Cancelled"; pillClass = "status-cancelled"; pillIcon = "✕";
                             }
-                            else if (b.Comm_DateTime.HasValue &&
-                            b.Comm_ToDateTime.HasValue &&
-                            now >= b.Comm_DateTime.Value &&
-                            now <= b.Comm_ToDateTime.Value)
+                            else if (b.Comm_DateTime.HasValue && b.Comm_ToDateTime.HasValue &&
+                            now >= b.Comm_DateTime.Value && now <= b.Comm_ToDateTime.Value)
                             {
-                                liveStatus = "In Room";
-                                pillClass = "status-inroom";
-                                pillIcon = "🟢";
+                                liveStatus = "In Room"; pillClass = "status-inroom"; pillIcon = "🟢";
                             }
                             else if (b.Comm_ToDateTime.HasValue && now > b.Comm_ToDateTime.Value)
                             {
-                                liveStatus = "Finished";
-                                pillClass = "status-finished";
-                                pillIcon = "✓";
+                                liveStatus = "Finished"; pillClass = "status-finished"; pillIcon = "✓";
                             }
                             else
                             {
-                                liveStatus = "Confirmed";
-                                pillClass = "status-confirmed";
-                                pillIcon = "✓";
+                                liveStatus = "Confirmed"; pillClass = "status-confirmed"; pillIcon = "✓";
                             }
 
                             bool canCancel = liveStatus == "Confirmed";
+                            bool isRecurring = !string.IsNullOrEmpty(b.Comm_RecurrenceGroupId);
+
+                            string durationStr = "—";
+                            if (b.Comm_DateTime.HasValue && b.Comm_ToDateTime.HasValue)
+                            {
+                                var diff = (int)(b.Comm_ToDateTime.Value - b.Comm_DateTime.Value).TotalMinutes;
+                                if (diff > 0)
+                                {
+                                    var h = diff / 60; var m = diff % 60;
+                                    durationStr = h == 0 ? $"{m}min" : m == 0 ? $"{h}h" : $"{h}h {m}min";
+                                }
+                            }
+
+                            var reqList = string.IsNullOrEmpty(b.Comm_RequiredInvitees)
+                            ? new string[0]
+                            : b.Comm_RequiredInvitees.Split(',',
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                            var optList = string.IsNullOrEmpty(b.Comm_OptionalInvitees)
+                            ? new string[0]
+                            : b.Comm_OptionalInvitees.Split(',',
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                            var totalInvitees = reqList.Length + optList.Length;
+                            var reqJson = System.Text.Json.JsonSerializer.Serialize(reqList);
+                            var optJson = System.Text.Json.JsonSerializer.Serialize(optList);
 
                             <tr class="booking-row">
                                 <td>
                                     <span style="font-weight:700;color:var(--text)">@b.Comm_Subject</span>
-                                    @if (b.Comm_RecurrenceRule != null)
+                                    @if (isRecurring)
                                     {
                                         <span class="ms-2"
-                                              style="font-size:.7rem;background:var(--primary-light);
-                                             color:var(--primary);border-radius:6px;
-                                             padding:2px 7px;font-weight:700">
+                                              style="font-size:.7rem;background:rgba(26,39,68,0.07);
+                                                                     color:var(--navy);border-radius:6px;
+                                                                     padding:2px 7px;font-weight:700">
                                             🔄 @b.Comm_RecurrenceRule
                                         </span>
                                     }
                                 </td>
                                 <td>
-                                    <span style="color:var(--primary)">
+                                    <span style="color:var(--navy)">
                                         <i class="fas fa-door-open me-1"></i>@b.Comm_MeetingRoom
                                     </span>
                                 </td>
@@ -163,24 +407,58 @@
                                 <td style="color:var(--text-secondary);font-size:.875rem">
                                     @b.Comm_ToDateTime?.ToString("MMM dd, HH:mm")
                                 </td>
-                                <td style="color:var(--text-secondary)">
-                                    @b.Comm_Organizer
+                                <td>
+                                    <span style="background:rgba(26,39,68,0.06);color:var(--navy);
+                                                       border-radius:6px;padding:2px 9px;
+                                                       font-size:.76rem;font-weight:700">
+                                        <i class="fas fa-hourglass-half me-1" style="font-size:.65rem"></i>
+                                        @durationStr
+                                    </span>
                                 </td>
                                 <td>
-                                    <span class="status-pill @pillClass">
-                                        @pillIcon @liveStatus
-                                    </span>
+                                    @if (totalInvitees > 0)
+                                    {
+                                        <span class="invitees-trigger"
+                                              onmouseenter="showInvitees(event, @reqJson, @optJson)"
+                                              onmouseleave="hideInvitees()">
+                                            <i class="fas fa-users" style="font-size:.72rem;color:var(--navy)"></i>
+                                            @totalInvitees invitee@(totalInvitees == 1 ? "" : "s")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--text-muted);font-size:.8rem">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="status-pill @pillClass">@pillIcon @liveStatus</span>
                                 </td>
                                 <td>
                                     @if (canCancel)
                                     {
-                                        <button type="button"
-                                                class="btn btn-danger btn-sm"
-                                                onclick="openCancelModal(
-                                          @b.Comm_CommunicationId,
-                                          '@Html.Raw((b.Comm_Subject ?? "this booking").Replace("'", "\\'"))')">
-                                            <i class="fas fa-times me-1"></i>Cancel
-                                        </button>
+                                        if (isRecurring)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm"
+                                                    style="background:rgba(26,39,68,0.07);color:var(--navy);
+                                                                                     border:1.5px solid rgba(26,39,68,0.15);
+                                                                                     border-radius:8px;font-weight:700;font-size:.78rem"
+                                                    onclick="openSeriesModal(
+                                                                                @b.Comm_CommunicationId,
+                                                                                '@Html.Raw((b.Comm_Subject ?? "this booking").Replace("'", "\\'"))',
+                                                                                '@b.Comm_RecurrenceGroupId')">
+                                                <i class="fas fa-ellipsis-h me-1"></i>Manage Series
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                    onclick="openCancelModal(
+                                                                                @b.Comm_CommunicationId,
+                                                                                '@Html.Raw((b.Comm_Subject ?? "this booking").Replace("'", "\\'"))')">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
+                                        }
                                     }
                                     else
                                     {
@@ -206,17 +484,78 @@
         function openCancelModal(id, subject) {
           document.getElementById('cancel-modal-msg').innerHTML =
             `Are you sure you want to cancel <strong style="color:var(--text)">"${subject}"</strong>?<br/>
-             <span style="font-size:.82rem;color:var(--text-secondary)">
-               This action cannot be undone.
-             </span>`;
-
+             <span style="font-size:.82rem;color:var(--text-secondary)">This action cannot be undone.</span>`;
           document.getElementById('cancelConfirmForm').action = `/Booking/Cancel/${id}`;
           document.getElementById('cancelModal').style.display = 'flex';
         }
-
         function closeCancelBackdrop(e) {
           if (e.target.id === 'cancelModal')
             document.getElementById('cancelModal').style.display = 'none';
+        }
+
+        function openSeriesModal(id, subject, groupId) {
+          document.getElementById('series-modal-msg').innerHTML =
+            `How would you like to cancel <strong style="color:var(--text)">"${subject}"</strong>?`;
+
+          document.getElementById('cancelSingleForm').action    = `/Booking/Cancel/${id}`;
+          document.getElementById('cancelFromHereForm').action  = `/Booking/CancelFromHere/${id}`;
+          document.getElementById('cancelSeriesForm').action    = `/Booking/CancelSeries/${id}`;
+
+          document.getElementById('cancelSeriesModal').style.display = 'flex';
+        }
+        function closeSeriesBackdrop(e) {
+          if (e.target.id === 'cancelSeriesModal')
+            document.getElementById('cancelSeriesModal').style.display = 'none';
+        }
+
+        let hideTimer = null;
+        function showInvitees(event, required, optional) {
+          clearTimeout(hideTimer);
+          const popup   = document.getElementById('inviteesPopup');
+          const reqDiv  = document.getElementById('popupRequired');
+          const optDiv  = document.getElementById('popupOptional');
+          const reqList = document.getElementById('popupRequiredList');
+          const optList = document.getElementById('popupOptionalList');
+
+          reqList.innerHTML = '';
+          if (required && required.length > 0) {
+            reqDiv.style.display = 'block';
+            required.forEach(email => {
+              const chip = document.createElement('span');
+              chip.className = 'email-chip';
+              chip.innerHTML = `<i class="fas fa-envelope"></i>${email.trim()}`;
+              reqList.appendChild(chip);
+            });
+          } else { reqDiv.style.display = 'none'; }
+
+          optList.innerHTML = '';
+          if (optional && optional.length > 0) {
+            optDiv.style.display = 'block';
+            optional.forEach(email => {
+              const chip = document.createElement('span');
+              chip.className = 'email-chip';
+              chip.innerHTML = `<i class="fas fa-envelope"></i>${email.trim()}`;
+              optList.appendChild(chip);
+            });
+          } else { optDiv.style.display = 'none'; }
+
+          popup.style.display = 'block';
+          const trigger = event.currentTarget;
+          const rect    = trigger.getBoundingClientRect();
+          const popW    = popup.offsetWidth  || 260;
+          const popH    = popup.offsetHeight || 120;
+          let left = rect.left + window.scrollX;
+          let top  = rect.top  + window.scrollY - popH - 10;
+          if (left + popW > window.innerWidth - 16) left = window.innerWidth - popW - 16;
+          if (left < 8) left = 8;
+          if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 10;
+          popup.style.left = left + 'px';
+          popup.style.top  = top  + 'px';
+        }
+        function hideInvitees() {
+          hideTimer = setTimeout(() => {
+            document.getElementById('inviteesPopup').style.display = 'none';
+          }, 150);
         }
     </script>
 }

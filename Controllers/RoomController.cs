@@ -1,48 +1,45 @@
-﻿using MeetingRoomBooking.Data;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MeetingRoomBooking.Constants;
+using MeetingRoomBooking.Data;
 using MeetingRoomBooking.Filters;
 using MeetingRoomBooking.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace MeetingRoomBooking.Controllers
 {
     [RequireLogin]
+    [RequireAdmin]
     [NoCache]
     public class RoomController : Controller
     {
         private readonly AppDbContext _context;
+
+        private static readonly string[] CompanyList =
+        {
+            "Kia Jordan", "Kia Iraq", "GAC Jordan",
+            "GAC Iraq",   "BYD Iraq", "Isuzu"
+        };
 
         public RoomController(AppDbContext context)
         {
             _context = context;
         }
 
-        private string? GetCompany() =>
-            HttpContext.Session.GetString("UserCompany");
-
-        private IActionResult RedirectIfNotLoggedIn()
-        {
-            if (string.IsNullOrEmpty(GetCompany()))
-                return RedirectToAction("Login", "Auth");
-            return null!;
-        }
+        private string GetCompany() =>
+            HttpContext.Session.GetString(SessionKeys.UserCompany)!;
 
         public async Task<IActionResult> Index()
         {
-            var redirect = RedirectIfNotLoggedIn();
-            if (redirect != null) return redirect;
-
-            var company = GetCompany()!;
             var now = DateTime.Now;
 
             var rooms = await _context.MeetingRooms
-                .Where(r => r.Room_IsActive == 1 && r.Room_Company == company)
+                .Where(r => r.Room_IsActive == 1)
                 .ToListAsync();
 
             var occupiedRoomNames = await _context.Communications
                 .Where(c =>
                     c.Comm_Deleted == 0 &&
-                    c.Comm_Status != "Cancelled" &&
+                    c.Comm_Status != BookingStatus.Cancelled &&
                     c.Comm_DateTime <= now &&
                     c.Comm_ToDateTime > now)
                 .Select(c => c.Comm_MeetingRoom)
@@ -50,32 +47,23 @@ namespace MeetingRoomBooking.Controllers
                 .ToListAsync();
 
             ViewBag.OccupiedRooms = occupiedRoomNames;
-            ViewBag.UserCompany = company;
+            ViewBag.UserCompany = GetCompany();
+            ViewBag.Companies = CompanyList;
 
             return View(rooms);
         }
 
         public IActionResult Create()
         {
-            var redirect = RedirectIfNotLoggedIn();
-            if (redirect != null) return redirect;
-
-            var vm = new RoomViewModel
-            {
-                Room_Company = GetCompany()
-            };
-
-            return View(vm);
+            ViewBag.Companies = CompanyList;
+            return View(new RoomViewModel { Room_Company = GetCompany() });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(RoomViewModel vm)
         {
-            var redirect = RedirectIfNotLoggedIn();
-            if (redirect != null) return redirect;
-
-            var company = GetCompany()!;
+            var company = vm.Room_Company ?? GetCompany();
 
             var exists = await _context.MeetingRooms.AnyAsync(r =>
                 r.Room_Name == vm.Room_Name &&
@@ -83,14 +71,13 @@ namespace MeetingRoomBooking.Controllers
                 r.Room_IsActive == 1);
 
             if (exists)
-            {
                 ModelState.AddModelError("Room_Name",
-                    "A room with this name already exists in your company.");
-            }
+                    "A room with this name already exists in that company.");
 
             if (!ModelState.IsValid)
             {
                 vm.Room_Company = company;
+                ViewBag.Companies = CompanyList;
                 return View(vm);
             }
 
@@ -113,16 +100,12 @@ namespace MeetingRoomBooking.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var redirect = RedirectIfNotLoggedIn();
-            if (redirect != null) return redirect;
-
-            var company = GetCompany()!;
             var room = await _context.MeetingRooms.FindAsync(id);
+            if (room == null) return RedirectToAction(nameof(Index));
 
-            if (room == null || room.Room_Company != company)
-                return RedirectToAction(nameof(Index));
+            ViewBag.Companies = CompanyList;
 
-            var vm = new RoomViewModel
+            return View(new RoomViewModel
             {
                 Room_Id = room.Room_Id,
                 Room_Name = room.Room_Name,
@@ -130,23 +113,17 @@ namespace MeetingRoomBooking.Controllers
                 Room_Capacity = room.Room_Capacity,
                 Room_Amenities = room.Room_Amenities,
                 Room_Company = room.Room_Company
-            };
-
-            return View(vm);
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, RoomViewModel vm)
         {
-            var redirect = RedirectIfNotLoggedIn();
-            if (redirect != null) return redirect;
-
-            var company = GetCompany()!;
             var room = await _context.MeetingRooms.FindAsync(id);
+            if (room == null) return RedirectToAction(nameof(Index));
 
-            if (room == null || room.Room_Company != company)
-                return RedirectToAction(nameof(Index));
+            var company = vm.Room_Company ?? room.Room_Company;
 
             var exists = await _context.MeetingRooms.AnyAsync(r =>
                 r.Room_Name == vm.Room_Name &&
@@ -155,14 +132,13 @@ namespace MeetingRoomBooking.Controllers
                 r.Room_Id != id);
 
             if (exists)
-            {
                 ModelState.AddModelError("Room_Name",
-                    "A room with this name already exists in your company.");
-            }
+                    "A room with this name already exists in that company.");
 
             if (!ModelState.IsValid)
             {
                 vm.Room_Company = company;
+                ViewBag.Companies = CompanyList;
                 return View(vm);
             }
 
@@ -170,6 +146,7 @@ namespace MeetingRoomBooking.Controllers
             room.Room_Location = vm.Room_Location?.Trim();
             room.Room_Capacity = vm.Room_Capacity;
             room.Room_Amenities = vm.Room_Amenities?.Trim();
+            room.Room_Company = company;
 
             await _context.SaveChangesAsync();
 
@@ -181,19 +158,13 @@ namespace MeetingRoomBooking.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var redirect = RedirectIfNotLoggedIn();
-            if (redirect != null) return redirect;
-
-            var company = GetCompany()!;
             var room = await _context.MeetingRooms.FindAsync(id);
-
-            if (room != null && room.Room_Company == company)
+            if (room != null)
             {
                 room.Room_IsActive = 0;
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Room \"{room.Room_Name}\" has been removed.";
             }
-
             return RedirectToAction(nameof(Index));
         }
     }

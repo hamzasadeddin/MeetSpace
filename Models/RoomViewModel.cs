@@ -17,6 +17,7 @@ namespace MeetingRoomBooking.Models
 
         [StringLength(500)]
         public string? Room_Amenities { get; set; }
+
         public string? Room_Company { get; set; }
     }
 }

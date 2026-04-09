@@ -4,15 +4,15 @@ using MeetingRoomBooking.Constants;
 
 namespace MeetingRoomBooking.Filters
 {
-    public class RequireLoginAttribute : ActionFilterAttribute
+    public class RequireAdminAttribute : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var company = context.HttpContext.Session.GetString(SessionKeys.UserCompany);
+            var role = context.HttpContext.Session.GetString(SessionKeys.UserRole);
 
-            if (string.IsNullOrEmpty(company))
+            if (string.IsNullOrEmpty(role) || role != "Admin")
             {
-                context.Result = new RedirectToActionResult("Login", "Auth", null);
+                context.Result = new RedirectToActionResult("Index", "Home", null);
                 return;
             }
 

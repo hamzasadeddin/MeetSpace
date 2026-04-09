@@ -72,5 +72,8 @@ namespace MeetingRoomBooking.Models
         public string? Comm_MeetingRoom { get; set; }
         public string? Comm_RecurrenceRule { get; set; }
         public int? Comm_RecurrenceParentID { get; set; }
+        public string? Comm_RequiredInvitees { get; set; }
+        public string? Comm_OptionalInvitees { get; set; }
+        public string? Comm_RecurrenceGroupId { get; set; }
     }
 }

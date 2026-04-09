@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MeetingRoomBooking.Constants;
 using MeetingRoomBooking.Data;
 using MeetingRoomBooking.Models;
 
@@ -16,7 +17,7 @@ namespace MeetingRoomBooking.Controllers
 
         public IActionResult Login()
         {
-            if (HttpContext.Session.GetString("UserCompany") != null)
+            if (HttpContext.Session.GetString(SessionKeys.UserCompany) != null)
                 return RedirectToAction("Index", "Home");
 
             return View();
@@ -41,10 +42,11 @@ namespace MeetingRoomBooking.Controllers
                 return View(vm);
             }
 
-            HttpContext.Session.SetInt32("UserId", user.User_Id);
-            HttpContext.Session.SetString("UserName", $"{user.User_FName} {user.User_LName}");
-            HttpContext.Session.SetString("UserEmail", user.User_Logon);
-            HttpContext.Session.SetString("UserCompany", user.User_Company);
+            HttpContext.Session.SetInt32(SessionKeys.UserId, user.User_Id);
+            HttpContext.Session.SetString(SessionKeys.UserName, $"{user.User_FName} {user.User_LName}");
+            HttpContext.Session.SetString(SessionKeys.UserEmail, user.User_Logon);
+            HttpContext.Session.SetString(SessionKeys.UserCompany, user.User_Company);
+            HttpContext.Session.SetString(SessionKeys.UserRole, user.User_Role);
 
             return RedirectToAction("Index", "Home");
         }
@@ -56,7 +58,6 @@ namespace MeetingRoomBooking.Controllers
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
-
             return RedirectToAction("Login");
         }
     }

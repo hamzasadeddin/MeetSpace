@@ -27,5 +27,10 @@ namespace MeetingRoomBooking.Models
         public byte User_IsActive { get; set; } = 1;
 
         public DateTime? User_CreatedDate { get; set; }
+
+        public string User_Role { get; set; } = "User";
+        public string? User_Phone { get; set; }
+        public string? User_Email { get; set; }
+        public string? User_Department { get; set; }
     }
 }

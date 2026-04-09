@@ -27,6 +27,11 @@ namespace MeetingRoomBooking.Models
         public string? RecurrenceType { get; set; }
         public DateTime? RecurrenceEndDate { get; set; }
 
+        [Required(ErrorMessage = "Please add at least one required invitee.")]
+        public string? RequiredInvitees { get; set; }
+
+        public string? OptionalInvitees { get; set; }
+
         public MeetingRoom? Room { get; set; }
         public List<MeetingRoom> AvailableRooms { get; set; } = new();
     }

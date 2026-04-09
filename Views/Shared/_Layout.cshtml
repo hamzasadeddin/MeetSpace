@@ -6,7 +6,7 @@
     <title>@ViewData["Title"] — MeetSpace</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("HeadExtra", required: false)
 </head>
@@ -17,88 +17,72 @@
         var userCompany = Context.Session.GetString("UserCompany");
         var userEmail = Context.Session.GetString("UserEmail");
         var isLoggedIn = !string.IsNullOrEmpty(userName);
+        var logoSrc = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAFcAWcDASIAAhEBAxEB/8QAHQABAAEFAQEBAAAAAAAAAAAAAAUBBAYHCAIDCf/EAFMQAAEDBAAEAwQFCAMMCAYDAAEAAgMEBQYRBxIhMRNBUQgUImEjMlJxgRUWQmKRobHwgtHxFyQlMzQ3OGNyc3SzGENVdZKUtME1REVTVIOEwuH/xAAZAQEBAQEBAQAAAAAAAAAAAAAAAQIDBAX/xAAmEQEBAAICAgEDBQEBAAAAAAAAAQIRAyESMUEEYfATIjJRgeFx/9oADAMBAAIRAxEAPwDnVERfaeQREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERQERB17Kgi9RsfIdRtc86LvhG+g7leVNwERFQREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREPTe/LugIvrSU9RV1MdLSwSzzyODWRRNLnuJ8gB1J+Q6radr4QR2WghvPFO/wBPidBI3njoR9JcagejIh9X/aIOvMemMs5isjV1BSVNfVRUtFTy1NRK4NjiiYXuefQNAJJ+7qto27hJSWChiu3Fe/w41SyN547XERNcalvkBGCQwHp1cTrzAWT4jfb1cHzWLgPhDrRTcpZU3+qAfVlvm58z/gi9eVu/Ueiiayl4b4bWyVuV3WfiRlkji6WkpKl3uTZP9bOfilP3fMEdlxy5LWtaea3Iqyuw+923hXgJtGMxUrzdbpURiWqniA+LxJnfC3f2GnfotMnXYf2fJb0zyDifkOB1F2yupt+GYvBEXW6ydKVlU4fVjjgHxP3sHb/vA7rRZ16k/f1K6cXcTJRERdWRERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERARVVD079EFVQ9O69wRyTTNhhY98jjprWDbifTXn37LZ9h4P1dLbo77xFvNLhdocOZgqW81bUfKOEdR08yOm+x2dYyzkWY7axghmnnZDBE+SV55WsYzmcSfQDrv7uq2jZuEDrZb4r7xNvtPhtscOaOCUeJcJ/93C3q0n1I2N9QslxG/ymqfYeAOCzsqdeHNf6+Ns1YAfPmd9HA099bHl0BCsrva8ExS4PuvEnJKrPcrc7clrt9U4wMf8AZmqe51200dPTS5ZcmV6jUx0kMSv1wqppLFwDwSShIbyT3+ta2WrI8y6R30cQIJOgRvprRCjLjQ8PcQr5bjnV8qOIeVvdt9BQ1LjStk9JqgnbyOnRvpojop6pg4j5rjjJL5V23hlw8YPggDfdYns78rYhqSYkepDSeoHUqIx294/ZLmyzcFsMqsmyLWhfrnTeLKw9uaKH6sYH236I672ucaSl0pOIeY49HVZfcrbwzwKMfQ0XJ7rG9vfTIG6fKdddO0Dskd1G4xfrVbbiLJwOwmqvd9I06/XOATTs/Xjj+pCN/pOO9HqOy9ZNYbNa6918435xVXu9622w2up8WVnnyySj4YW/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";
     }
 
     @if (isLoggedIn)
     {
         <div id="logoutModal"
              style="display:none;position:fixed;inset:0;z-index:99999;
-                  background:rgba(30,31,75,0.45);backdrop-filter:blur(6px);
+                  background:rgba(17,28,51,0.55);backdrop-filter:blur(6px);
                   align-items:center;justify-content:center"
              onclick="closeLogoutBackdrop(event)">
-            <div style="background:var(--surface);border-radius:24px;
+            <div style="background:var(--surface);border-radius:22px;
                     padding:2.5rem 2.2rem;max-width:400px;width:92%;
                     text-align:center;
-                    box-shadow:0 24px 80px rgba(91,106,247,0.22);
-                    border:1.5px solid var(--border);
-                    animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)">
-
+                    box-shadow:0 24px 80px rgba(17,28,51,0.28);
+                    border:1.5px solid var(--border)">
                 <div style="width:58px;height:58px;border-radius:50%;
-                      background:rgba(91,106,247,0.08);
-                      border:1.5px solid rgba(91,106,247,0.18);
+                      background:rgba(26,39,68,0.08);
+                      border:1.5px solid rgba(26,39,68,0.15);
                       display:flex;align-items:center;justify-content:center;
                       margin:0 auto 1.2rem;font-size:1.4rem">
                     👋
                 </div>
-
-                <h4 style="font-family:'Clash Display',sans-serif;font-size:1.2rem;
+                <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;
                      font-weight:700;color:var(--text);margin-bottom:.5rem">
                     Sign Out?
                 </h4>
                 <p style="color:var(--text-secondary);font-size:.9rem;
                     line-height:1.65;margin-bottom:1.8rem">
-                    You are signed in as
-                    <strong style="color:var(--text)">@userName</strong>.<br />
+                    You are signed in as <strong style="color:var(--text)">@userName</strong>.<br />
                     Are you sure you want to sign out?
                 </p>
-
                 <div class="d-flex gap-3">
                     <button type="button"
                             onclick="document.getElementById('logoutModal').style.display='none'"
-                            style="flex:1;background:var(--surface2);
-                           border:1.5px solid var(--border);
-                           border-radius:var(--radius-sm);
-                           font-family:'Nunito',sans-serif;
-                           font-weight:700;font-size:.9rem;
-                           padding:.65rem;color:var(--text);
+                            style="flex:1;background:var(--surface2);border:1.5px solid var(--border);
+                           border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;
+                           font-weight:600;font-size:.9rem;padding:.65rem;color:var(--text);
                            cursor:pointer;transition:all .2s"
-                            onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+                            onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'"
                             onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
                         Stay Signed In
                     </button>
                     <a asp-controller="Auth" asp-action="Logout"
-                       style="flex:1;
-                      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+                       style="flex:1;background:linear-gradient(135deg,var(--gold),#b8923e);
                       border:none;border-radius:var(--radius-sm);
-                      font-family:'Nunito',sans-serif;font-weight:700;
-                      font-size:.9rem;padding:.65rem;color:#fff;
-                      text-decoration:none;
-                      display:flex;align-items:center;justify-content:center;gap:6px;
-                      box-shadow:0 4px 14px rgba(91,106,247,0.3);
-                      transition:all .2s"
-                       onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 24px rgba(91,106,247,0.4)'"
-                       onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(91,106,247,0.3)'">
+                      font-family:'DM Sans',sans-serif;font-weight:700;
+                      font-size:.9rem;padding:.65rem;color:var(--navy-deep) !important;
+                      text-decoration:none;display:flex;align-items:center;
+                      justify-content:center;gap:6px;
+                      box-shadow:var(--shadow-gold);transition:all .2s"
+                       onmouseover="this.style.transform='translateY(-1px)'"
+                       onmouseout="this.style.transform=''">
                         <i class="fas fa-sign-out-alt"></i> Yes, Sign Out
                     </a>
                 </div>
-
             </div>
         </div>
     }
 
-    <nav class="navbar navbar-expand-lg navbar-light glass-nav fixed-top">
+    <nav class="navbar navbar-expand-lg glass-nav fixed-top">
         <div class="container">
-
-            <a class="navbar-brand brand-logo" asp-controller="Home" asp-action="Index">
-                <i class="fas fa-calendar-check me-2"></i>MeetSpace
-            </a>
-
             <button class="navbar-toggler" type="button"
                     data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    style="border-color:var(--border)">
-                <span class="navbar-toggler-icon"></span>
+                    style="border-color:rgba(255,255,255,0.2)">
+                <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
                 @if (isLoggedIn)
                 {
@@ -118,116 +102,97 @@
                                 <i class="fas fa-calendar-alt me-1"></i>My Bookings
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Room" asp-action="Index">
-                                <i class="fas fa-cog me-1"></i>Manage Rooms
-                            </a>
-                        </li>
+                        @if (Context.Session.GetString("UserRole") == "Admin")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Room" asp-action="Index">
+                                    <i class="fas fa-cog me-1"></i>Manage Rooms
+                                </a>
+                            </li>
+                        }
                         <li class="nav-item">
                             <a class="btn btn-primary ms-lg-2"
                                asp-controller="Booking" asp-action="Create"
-                               style="font-size:.84rem;padding:.45rem 1.1rem">
+                               style="font-size:.84rem;padding:.45rem 1.2rem;color:var(--navy-deep) !important">
                                 <i class="fas fa-plus me-1"></i>Book Now
                             </a>
                         </li>
                     </ul>
-
                     <div class="dropdown ms-lg-3">
                         <button class="d-flex align-items-center gap-2 dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                style="background:var(--surface2);
-                             border:1.5px solid var(--border);
-                             border-radius:40px;
-                             padding:.38rem .9rem .38rem .5rem;
-                             cursor:pointer;transition:all .2s;
-                             font-family:'Nunito',sans-serif;"
-                                onmouseover="this.style.borderColor='var(--primary)';this.style.background='var(--primary-light)'"
-                                onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);
+                             border-radius:40px;padding:.38rem .9rem .38rem .5rem;
+                             cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif"
+                                onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(201,168,76,0.12)'"
+                                onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.background='rgba(255,255,255,0.08)'">
                             <span style="width:30px;height:30px;border-radius:50%;
-                             background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+                             background:linear-gradient(135deg,var(--gold),#b8923e);
                              display:flex;align-items:center;justify-content:center;
-                             color:#fff;font-size:.75rem;font-weight:800;flex-shrink:0">
+                             color:var(--navy-deep);font-size:.75rem;font-weight:800;flex-shrink:0">
                                 @(userName?.Length > 0 ? userName[0].ToString().ToUpper() : "U")
                             </span>
-                            <span style="font-size:.83rem;font-weight:700;color:var(--text);
-                             max-width:110px;overflow:hidden;
-                             text-overflow:ellipsis;white-space:nowrap">
+                            <span style="font-size:.83rem;font-weight:600;color:rgba(255,255,255,0.9);
+                             max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                                 @userName
                             </span>
                         </button>
-
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm"
+                        <ul class="dropdown-menu dropdown-menu-end shadow"
                             style="border:1.5px solid var(--border);border-radius:16px;
-                         padding:.5rem;min-width:220px;margin-top:.4rem;
-                         font-family:'Nunito',sans-serif">
-
+                         padding:.5rem;min-width:220px;margin-top:.5rem;
+                         font-family:'DM Sans',sans-serif;box-shadow:var(--shadow-lg)">
                             <li>
-                                <div style="padding:.5rem .85rem .6rem;
-                              border-bottom:1px solid var(--border);
-                              margin-bottom:.4rem">
-                                    <div style="font-size:.68rem;font-weight:800;
-                                 text-transform:uppercase;letter-spacing:.08em;
-                                 color:var(--text-secondary);margin-bottom:.25rem">
+                                <div style="padding:.5rem .85rem .6rem;border-bottom:1px solid var(--border);margin-bottom:.4rem">
+                                    <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;
+                                 letter-spacing:.09em;color:var(--text-muted);margin-bottom:.3rem">
                                         Company
                                     </div>
                                     <div style="display:inline-flex;align-items:center;gap:6px;
-                                 background:var(--primary-light);color:var(--primary);
+                                 background:rgba(26,39,68,0.07);color:var(--navy);
                                  border-radius:20px;padding:3px 12px;
-                                 font-size:.76rem;font-weight:800">
-                                        <i class="fas fa-building" style="font-size:.68rem"></i>
-                                        @userCompany
+                                 font-size:.76rem;font-weight:700;border:1px solid var(--border-navy)">
+                                        <i class="fas fa-building" style="font-size:.66rem"></i>@userCompany
                                     </div>
                                 </div>
                             </li>
-
                             <li>
-                                <div style="padding:.3rem .85rem;font-size:.78rem;
-                               color:var(--text-secondary);font-weight:600">
-                                    <i class="fas fa-envelope me-2" style="opacity:.6"></i>
-                                    @userEmail
+                                <div style="padding:.3rem .85rem;font-size:.78rem;color:var(--text-secondary);font-weight:500">
+                                    <i class="fas fa-envelope me-2" style="opacity:.5"></i>@userEmail
                                 </div>
                             </li>
-
-                            <li>
-                                <hr class="dropdown-divider"
-                                    style="border-color:var(--border);margin:.4rem .5rem" />
-                            </li>
-
+                            <li><hr class="dropdown-divider" style="border-color:var(--border);margin:.4rem .5rem" /></li>
                             <li>
                                 <button type="button"
                                         onclick="document.getElementById('logoutModal').style.display='flex'"
                                         class="dropdown-item d-flex align-items-center gap-2"
-                                        style="border-radius:10px;font-size:.84rem;font-weight:700;
+                                        style="border-radius:9px;font-size:.84rem;font-weight:600;
                                  color:var(--danger);padding:.5rem .85rem;
                                  transition:background .15s;background:transparent;
-                                 border:none;width:100%;cursor:pointer;
-                                 font-family:'Nunito',sans-serif"
-                                        onmouseover="this.style.background='rgba(239,68,68,0.07)'"
+                                 border:none;width:100%;cursor:pointer;font-family:'DM Sans',sans-serif"
+                                        onmouseover="this.style.background='rgba(185,28,28,0.07)'"
                                         onmouseout="this.style.background='transparent'">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    Sign Out
+                                    <i class="fas fa-sign-out-alt"></i> Sign Out
                                 </button>
                             </li>
-
                         </ul>
                     </div>
                 }
             </div>
-
         </div>
     </nav>
 
-    <main>
-        @RenderBody()
-    </main>
+    <main>@RenderBody()</main>
 
     <footer class="footer-light mt-5">
-        <div class="container text-center py-4">
-            <p class="mb-0" style="color:var(--text-secondary)">
-                © 2025 MeetSpace — @(userCompany ?? "Smart Room Booking")
-            </p>
+        <div class="container py-4">
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                <img src="@logoSrc" alt="Alayyan"
+                     style="height:72px;width:auto;object-fit:contain;opacity:.92" />
+                <p class="mb-0" style="color:rgba(255,255,255,0.45);font-size:.82rem">
+                    © 2026 MeetSpace by Alayyan Group Technology
+                </p>
+                
+            </div>
         </div>
     </footer>
 

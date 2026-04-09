@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MeetingRoomBooking.Constants;
 using MeetingRoomBooking.Data;
 using MeetingRoomBooking.Filters;
 using MeetingRoomBooking.Models;
@@ -17,8 +18,8 @@ namespace MeetingRoomBooking.Controllers
             _context = context;
         }
 
-        private string GetCompany() => HttpContext.Session.GetString("UserCompany")!;
-        private string GetUserName() => HttpContext.Session.GetString("UserName")!;
+        private string GetCompany() => HttpContext.Session.GetString(SessionKeys.UserCompany)!;
+        private string GetUserName() => HttpContext.Session.GetString(SessionKeys.UserName)!;
 
         public async Task<IActionResult> Index()
         {
@@ -32,7 +33,7 @@ namespace MeetingRoomBooking.Controllers
             var occupiedRoomNames = await _context.Communications
                 .Where(c =>
                     c.Comm_Deleted == 0 &&
-                    c.Comm_Status != "Cancelled" &&
+                    c.Comm_Status != BookingStatus.Cancelled &&
                     c.Comm_DateTime <= now &&
                     c.Comm_ToDateTime > now)
                 .Select(c => c.Comm_MeetingRoom)
@@ -94,7 +95,9 @@ namespace MeetingRoomBooking.Controllers
 
             async Task<IActionResult> ReturnWithError(string error)
             {
-                ModelState.AddModelError("", error);
+                if (!string.IsNullOrEmpty(error))
+                    ModelState.AddModelError("", error);
+
                 vm.AvailableRooms = await _context.MeetingRooms
                     .Where(r => r.Room_IsActive == 1 && r.Room_Company == company)
                     .ToListAsync();
@@ -103,13 +106,7 @@ namespace MeetingRoomBooking.Controllers
             }
 
             if (!ModelState.IsValid)
-            {
-                vm.AvailableRooms = await _context.MeetingRooms
-                    .Where(r => r.Room_IsActive == 1 && r.Room_Company == company)
-                    .ToListAsync();
-                vm.Room = await _context.MeetingRooms.FindAsync(vm.RoomId);
-                return View(vm);
-            }
+                return await ReturnWithError(string.Empty);
 
             if (vm.EndDateTime <= vm.StartDateTime)
                 return await ReturnWithError("⚠️ End time must be after start time.");
@@ -138,8 +135,14 @@ namespace MeetingRoomBooking.Controllers
                 if (vm.RecurrenceEndDate.Value.Date <= vm.StartDateTime.Date)
                     return await ReturnWithError("⚠️ Recurrence end date must be after the booking start date.");
 
-                var current = vm.StartDateTime;
+                var maxRecurrenceEnd = vm.StartDateTime.AddDays(92);
+                if (vm.RecurrenceEndDate.Value.Date > maxRecurrenceEnd.Date)
+                    return await ReturnWithError(
+                        $"⚠️ Recurring bookings cannot span more than one quarter (92 days). " +
+                        $"Your recurrence end date must be on or before {maxRecurrenceEnd:MMM dd, yyyy}. " +
+                        $"If you need a longer recurring schedule, please open a support ticket.");
 
+                var current = vm.StartDateTime;
                 while (true)
                 {
                     current = vm.RecurrenceType switch
@@ -149,48 +152,47 @@ namespace MeetingRoomBooking.Controllers
                         "monthly" => current.AddMonths(1),
                         _ => vm.RecurrenceEndDate.Value.AddDays(1)
                     };
-
                     if (current.Date > vm.RecurrenceEndDate.Value.Date) break;
                     slots.Add((current, current + duration));
                 }
 
-                if (slots.Count > 366)
-                    return await ReturnWithError("⚠️ Recurrence creates too many bookings (max 366). Please shorten the date range.");
+                if (slots.Count > 92)
+                    return await ReturnWithError(
+                        "⚠️ Recurring bookings are limited to one quarter. " +
+                        "Please shorten the date range or open a support ticket.");
             }
 
             var conflictingSlots = new List<(DateTime Start, DateTime End)>();
-
             foreach (var (start, end) in slots)
             {
                 var hasConflict = await _context.Communications.AnyAsync(c =>
                     c.Comm_MeetingRoom == selectedRoom.Room_Name &&
                     c.Comm_Deleted == 0 &&
-                    c.Comm_Status != "Cancelled" &&
+                    c.Comm_Status != BookingStatus.Cancelled &&
                     c.Comm_DateTime < end &&
-                    c.Comm_ToDateTime > start
-                );
-                if (hasConflict)
-                    conflictingSlots.Add((start, end));
+                    c.Comm_ToDateTime > start);
+
+                if (hasConflict) conflictingSlots.Add((start, end));
             }
 
             if (conflictingSlots.Any())
             {
                 var conflictList = string.Join(", ", conflictingSlots
-                    .Take(3)
-                    .Select(s => s.Start.ToString("MMM dd HH:mm")));
+                    .Take(3).Select(s => s.Start.ToString("MMM dd HH:mm")));
                 var more = conflictingSlots.Count > 3
                     ? $" and {conflictingSlots.Count - 3} more..." : "";
-
                 return await ReturnWithError(
                     $"⚠️ \"{selectedRoom.Room_Name}\" is already booked during: {conflictList}{more}. " +
                     "Please choose a different time or room.");
             }
 
+            var groupId = vm.IsRecurring ? Guid.NewGuid().ToString() : null;
+
             var bookings = slots.Select(slot => new Communication
             {
-                Comm_Type = "Meeting",
-                Comm_Action = "Book",
-                Comm_Status = "Confirmed",
+                Comm_Type = BookingType.Meeting,
+                Comm_Action = BookingType.Book,
+                Comm_Status = BookingStatus.Confirmed,
                 Comm_Subject = vm.Subject,
                 Comm_Organizer = userName,
                 Comm_DateTime = slot.Start,
@@ -204,6 +206,9 @@ namespace MeetingRoomBooking.Controllers
                 Comm_IsAllDayEvent = "N",
                 Comm_MeetingID = Guid.NewGuid().ToString()[..20],
                 Comm_RecurrenceRule = vm.IsRecurring ? vm.RecurrenceType : null,
+                Comm_RecurrenceGroupId = groupId,
+                Comm_RequiredInvitees = vm.RequiredInvitees,
+                Comm_OptionalInvitees = vm.OptionalInvitees,
             }).ToList();
 
             _context.Communications.AddRange(bookings);
@@ -222,7 +227,7 @@ namespace MeetingRoomBooking.Controllers
 
             var bookings = await _context.Communications
                 .Where(c =>
-                    c.Comm_Type == "Meeting" &&
+                    c.Comm_Type == BookingType.Meeting &&
                     c.Comm_Deleted == 0 &&
                     c.Comm_Organizer == userName)
                 .OrderByDescending(c => c.Comm_DateTime)
@@ -238,13 +243,11 @@ namespace MeetingRoomBooking.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var userName = GetUserName();
-            var company = GetCompany();
-
             var booking = await _context.Communications.FindAsync(id);
 
             if (booking != null && booking.Comm_Organizer == userName)
             {
-                booking.Comm_Status = "Cancelled";
+                booking.Comm_Status = BookingStatus.Cancelled;
                 booking.Comm_Deleted = 1;
                 booking.Comm_UpdatedDate = DateTime.Now;
                 await _context.SaveChangesAsync();
@@ -252,6 +255,108 @@ namespace MeetingRoomBooking.Controllers
             }
 
             return RedirectToAction(nameof(MyBookings));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelSeries(int id)
+        {
+            var userName = GetUserName();
+            var booking = await _context.Communications.FindAsync(id);
+
+            if (booking == null || booking.Comm_Organizer != userName ||
+                string.IsNullOrEmpty(booking.Comm_RecurrenceGroupId))
+            {
+                TempData["ErrorMessage"] = "Series not found or access denied.";
+                return RedirectToAction(nameof(MyBookings));
+            }
+
+            var now = DateTime.Now;
+            var groupId = booking.Comm_RecurrenceGroupId;
+
+            var series = await _context.Communications
+                .Where(c =>
+                    c.Comm_RecurrenceGroupId == groupId &&
+                    c.Comm_Deleted == 0 &&
+                    c.Comm_Status != BookingStatus.Cancelled &&
+                    c.Comm_DateTime >= now)
+                .ToListAsync();
+
+            foreach (var s in series)
+            {
+                s.Comm_Status = BookingStatus.Cancelled;
+                s.Comm_Deleted = 1;
+                s.Comm_UpdatedDate = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"✅ {series.Count} upcoming session(s) in this series have been cancelled.";
+
+            return RedirectToAction(nameof(MyBookings));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelFromHere(int id)
+        {
+            var userName = GetUserName();
+            var booking = await _context.Communications.FindAsync(id);
+
+            if (booking == null || booking.Comm_Organizer != userName ||
+                string.IsNullOrEmpty(booking.Comm_RecurrenceGroupId))
+            {
+                TempData["ErrorMessage"] = "Series not found or access denied.";
+                return RedirectToAction(nameof(MyBookings));
+            }
+
+            var groupId = booking.Comm_RecurrenceGroupId;
+            var fromDate = booking.Comm_DateTime ?? DateTime.Now;
+
+            var series = await _context.Communications
+                .Where(c =>
+                    c.Comm_RecurrenceGroupId == groupId &&
+                    c.Comm_Deleted == 0 &&
+                    c.Comm_Status != BookingStatus.Cancelled &&
+                    c.Comm_DateTime >= fromDate)
+                .ToListAsync();
+
+            foreach (var s in series)
+            {
+                s.Comm_Status = BookingStatus.Cancelled;
+                s.Comm_Deleted = 1;
+                s.Comm_UpdatedDate = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"✅ This session and {series.Count - 1} future session(s) have been cancelled.";
+
+            return RedirectToAction(nameof(MyBookings));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetBusySlots(int roomId)
+        {
+            var room = await _context.MeetingRooms.FindAsync(roomId);
+            if (room == null) return Json(new List<object>());
+
+            var slots = await _context.Communications
+                .Where(c =>
+                    c.Comm_MeetingRoom == room.Room_Name &&
+                    c.Comm_Deleted == 0 &&
+                    c.Comm_Status != BookingStatus.Cancelled &&
+                    c.Comm_ToDateTime >= DateTime.Now)
+                .Select(c => new
+                {
+                    start = c.Comm_DateTime,
+                    end = c.Comm_ToDateTime
+                })
+                .ToListAsync();
+
+            return Json(slots);
         }
     }
 }
